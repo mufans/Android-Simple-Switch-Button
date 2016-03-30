@@ -18,27 +18,23 @@ import android.view.animation.LinearInterpolator;
 
 /**
  * Created by liujun on 16-3-30.
- *
- * simple switchButton
+ * <p>
+ * A simple switchButton
  */
 public class SwitchButton extends View {
 
-    enum State{
+    enum State {
         ON,
         OFF,
         SWITHING
     }
-
 
     private static final int DEF_TXT_SIZE = 12;
     private static final String DEF_TXT_ON = "ON";
     private static final String DEF_TXT_OFF = "OFF";
 
     private State currentState;
-
-
     private boolean isOn;
-
 
     private int left;
 
@@ -46,13 +42,8 @@ public class SwitchButton extends View {
 
     private String textOn = DEF_TXT_ON;
     private String textOff = DEF_TXT_OFF;
-
     private int textSize;
     private String currentTxt;
-
-
-
-
 
     public SwitchButton(Context context) {
         this(context, null);
@@ -70,9 +61,27 @@ public class SwitchButton extends View {
         init();
     }
 
+    private void initAttrs(Context context, AttributeSet attrs) {
 
+        TypedArray typedArray = context.obtainStyledAttributes(attrs, R.styleable.SwitchButton);
+
+        textOff = typedArray.getString(R.styleable.SwitchButton_switch_off_txt);
+        if (TextUtils.isEmpty(textOff)) {
+            textOff = DEF_TXT_OFF;
+        }
+        textOn = typedArray.getString(R.styleable.SwitchButton_switch_on_txt);
+        if (TextUtils.isEmpty(textOn)) {
+            textOn = DEF_TXT_ON;
+        }
+        textSize = typedArray.getDimensionPixelSize(R.styleable.SwitchButton_switch_txt_size, (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_SP, DEF_TXT_SIZE, context.getResources().getDisplayMetrics()));
+
+        isOn = typedArray.getBoolean(R.styleable.SwitchButton_swit_on, true);
+
+        typedArray.recycle();
+    }
 
     private void init() {
+
         setBackgroundResource(R.drawable.switch_bg);
 
         if (isOn) {
@@ -104,12 +113,20 @@ public class SwitchButton extends View {
         });
     }
 
+    /**
+     * change button state
+     */
     public void toggle() {
+
         if (isOn) {
             setSelected(true);
+            currentState = State.OFF;
         } else {
             setSelected(false);
+            currentState = State.ON;
         }
+        isOn = !isOn;
+
         invalidate();
     }
 
@@ -145,7 +162,7 @@ public class SwitchButton extends View {
     }
 
     private void animOn() {
-        ValueAnimator valueAnimator = ValueAnimator.ofInt(left,0);
+        ValueAnimator valueAnimator = ValueAnimator.ofInt(left, 0);
         valueAnimator.setDuration(300);
         valueAnimator.setInterpolator(new LinearInterpolator());
         valueAnimator.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
@@ -193,65 +210,45 @@ public class SwitchButton extends View {
     }
 
 
-    private void initAttrs(Context context, AttributeSet attrs) {
-        TypedArray typedArray = context.obtainStyledAttributes(attrs, R.styleable.SwitchButton);
-        textOff = typedArray.getString(R.styleable.SwitchButton_switch_off_txt);
-        if (TextUtils.isEmpty(textOff)) {
-            textOff = DEF_TXT_OFF;
-        }
-        textOn = typedArray.getString(R.styleable.SwitchButton_switch_on_txt);
-        if (TextUtils.isEmpty(textOn)) {
-            textOn = DEF_TXT_ON;
-        }
-        textSize = typedArray.getDimensionPixelSize(R.styleable.SwitchButton_switch_txt_size, (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_SP, DEF_TXT_SIZE, context.getResources().getDisplayMetrics()));
-        isOn = typedArray.getBoolean(R.styleable.SwitchButton_swit_on, true);
-        typedArray.recycle();
-    }
+
 
     @Override
     protected void onDraw(Canvas canvas) {
         super.onDraw(canvas);
+
         if (getWidth() == 0 || getHeight() == 0) {
             return;
         }
 
-        int width = getWidth() *2/ 3;
+        int width = getWidth() * 2 / 3;
         int height = getHeight();
-
         int top = 0;
 
-
+        //get button position
         switch (currentState) {
             case ON:
                 left = 0;
                 break;
             case OFF:
-                left = getWidth()/3;
+                left = getWidth() / 3;
                 break;
         }
 
-        Log.d("switch", left + "," + width + "");
+        //draw button
         paint.setStyle(Paint.Style.FILL);
         paint.setColor(getResources().getColor(R.color.color_btn));
         RectF rectF = new RectF();
         rectF.set(left, top, left + width, top + height);
         canvas.drawRoundRect(rectF, 20, 20, paint);
 
+        //draw text
         paint.setColor(Color.BLACK);
-
         String txt = getCurrentTxt();
-
         float txtWidth = paint.measureText(txt);
-
         Paint.FontMetrics metrics = paint.getFontMetrics();
-
         float txtHeight = metrics.descent - metrics.ascent;
-
         float txtleft = width / 2 - txtWidth / 2 + left;
-
-        float txtBottom = height / 2 + txtHeight / 2-metrics.descent;
-
-
+        float txtBottom = height / 2 + txtHeight / 2 - metrics.descent;
         canvas.drawText(txt, txtleft, txtBottom, paint);
     }
 }
